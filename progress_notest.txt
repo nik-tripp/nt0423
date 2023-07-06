@@ -1,0 +1,11 @@
+First off, I'm going to need to remember Java app structure - I've been working in JS webapps for a good while. I'll
+just follow the Maven structure def and separate some logical groups into packages.
+
+I've already got a good idea of what's going to need to be a class and what can be left as configuration in the DB, so
+I'll stub out my classes if for no other reason than to get some organization down where I can see it.
+
+As far as data and configuration are concerned, I could keep everything in .conf, constants, or similar files, but
+frankly I'd like to show off that I'm familiar with SQL interaction. Since this is a very light app, I'll spin up
+SQLite in-memory and spawn in the necessary data at connection time (which will only tool info at this point, but still,
+that's where data like this belongs).
+
