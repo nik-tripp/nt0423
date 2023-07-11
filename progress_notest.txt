@@ -25,3 +25,8 @@ Finally, onto the classes and unit tests. I'll start with the Tools, since that 
 start. I'll write the unit tests first, and get the class passing those, and do the same with the rest until I'm at a
 point where doing the integration testing seems feasible. Once I get past tools, though, the others are likely to be
 somewhat more interdependent, so I may skip around while I write them.
+
+Holidays is the first logical unit to get rewrites. I decided I could cut some code duplication by moving some of the
+logic into an abstract, instead of a pure interface. I also realized that some holidays we may choose to observe could
+be longer than a single day (e.g. Ramadan, with the use of an external API), so I'm going horrendously overboard to be
+able to handle that.
