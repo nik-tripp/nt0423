@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 /**
  * This class is responsible for connecting to the DB and building it if it doesn't exist.
@@ -52,8 +53,14 @@ public class DBConnection {
 
             // Build DB
             conn.beginRequest();
-            conn.createStatement().execute(schemaString);
-            conn.createStatement().execute(initString);
+            for (String query : schemaString.split(";")) {
+                if (query.isBlank()) continue; // Skip empty queries (last one will be empty)
+                conn.createStatement().execute(query+";");
+            }
+            for (String query : initString.split(";")) {
+                if (query.isBlank()) continue; // Skip empty queries (last one will be empty)
+                conn.createStatement().execute(query+";");
+            }
             conn.commit();
         } catch (IOException e) {
             throw new RuntimeException(e);
