@@ -12,3 +12,11 @@ that's where data like this belongs).
 I'm definitely going to want confirmation that I've actually set up the database correctly, so I'll write a test to
 check that the connection is being created. Correct data will be checked by the rest of the suite, so I'm not going to
 bother with that in the DB connection test.
+
+While I'm at it, I probably want unit tests for the major components I'll be writing, so I'll stub those out as well.
+The final integration tests can be written out fully now, since I know their criteria and want to program to them. The
+unit tests can have their stubs filled out after I have actual function names and signatures to work with.
+Fun fact: GitHub's Copilot AI seems to have found other repos for this project and is filling out my test names and
+expected string literals for me. I'm going to avoid using any major code chunks if it tries to suggest them, but I'm
+going to use the test names and strings because those are predefined and I don't want to waste time writing them myself.
+The strings aren't perfect between lines, but it does know the expected dates, days, and tool codes.

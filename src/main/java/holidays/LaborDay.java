@@ -1,4 +1,4 @@
 package holidays;
 
-public class LaborDay {
+public class LaborDay implements Holiday {
 }
