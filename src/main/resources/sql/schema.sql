@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS tool_type (
    --   actually store them as 1 and 0.
    weekday_charge,
    weekend_charge,
-   holiday_charge,
-)
+   holiday_charge
+);
 
 
 -- Individual tools available for rental
@@ -33,4 +33,4 @@ CREATE TABLE IF NOT EXISTS rental_agreement (
    check_out_date text, -- FORMAT yyyy-mm-dd (SQLITE has no date/time classes
    discount_percent integer,
    FOREIGN KEY (tool_id) REFERENCES tool (rowid)
-)
+);

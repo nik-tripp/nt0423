@@ -1,9 +1,14 @@
 package models;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+ * This class is responsible for connecting to the DB and building it if it doesn't exist.
+ */
 public class DBConnection {
     // If this weren't being designed to only use an in-memory DB, this would be in a .env
     private static final String _CONNECTION_URL = "jdbc:sqlite::memory:";
@@ -20,9 +25,46 @@ public class DBConnection {
     }
 
     private static Connection buildDB() throws SQLException {
-        Connection created = DriverManager.getConnection(_CONNECTION_URL);
-        // TODO use schema and init to actually create the DB
+        Connection conn = DriverManager.getConnection(_CONNECTION_URL);
+        StringBuilder queryReader;
+        String schemaString;
+        String initString;
 
-        return created;
+        // I want this build to be atomic, so I'm going to do manual commits for this section
+        conn.setAutoCommit(false);
+
+        try (InputStream schemaStream = DBConnection.class.getClassLoader().getResourceAsStream("sql/schema.sql");
+             InputStream initStream = DBConnection.class.getClassLoader().getResourceAsStream("sql/init.sql")) {
+
+            // Build schema string
+            queryReader = new StringBuilder();
+            while (schemaStream.available() > 0) {
+                queryReader.append((char) schemaStream.read());
+            }
+            schemaString = queryReader.toString();
+
+            // Build init string
+            queryReader = new StringBuilder();
+            while (initStream.available() > 0) {
+                queryReader.append((char) initStream.read());
+            }
+            initString = queryReader.toString();
+
+            // Build DB
+            conn.beginRequest();
+            conn.createStatement().execute(schemaString);
+            conn.createStatement().execute(initString);
+            conn.commit();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.endRequest();
+            conn.setAutoCommit(true);
+        }
+
+        return conn;
     }
 }

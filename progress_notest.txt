@@ -9,3 +9,6 @@ frankly I'd like to show off that I'm familiar with SQL interaction. Since this 
 SQLite in-memory and spawn in the necessary data at connection time (which will only tool info at this point, but still,
 that's where data like this belongs).
 
+I'm definitely going to want confirmation that I've actually set up the database correctly, so I'll write a test to
+check that the connection is being created. Correct data will be checked by the rest of the suite, so I'm not going to
+bother with that in the DB connection test.
