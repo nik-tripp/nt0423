@@ -20,3 +20,8 @@ Fun fact: GitHub's Copilot AI seems to have found other repos for this project a
 expected string literals for me. I'm going to avoid using any major code chunks if it tries to suggest them, but I'm
 going to use the test names and strings because those are predefined and I don't want to waste time writing them myself.
 The strings aren't perfect between lines, but it does know the expected dates, days, and tool codes.
+
+Finally, onto the classes and unit tests. I'll start with the Tools, since that just seems like the most logical place
+start. I'll write the unit tests first, and get the class passing those, and do the same with the rest until I'm at a
+point where doing the integration testing seems feasible. Once I get past tools, though, the others are likely to be
+somewhat more interdependent, so I may skip around while I write them.

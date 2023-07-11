@@ -11,7 +11,6 @@ VALUES
 ('Ladder', 1.99, true, true, false),
 ('Chainsaw', 1.49, true, false, true),
 ('Jackhammer', 2.99, true, false, false);
-
 INSERT INTO tool (
    code,
    type,
