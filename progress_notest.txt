@@ -5,7 +5,7 @@ I've already got a good idea of what's going to need to be a class and what can 
 I'll stub out my classes if for no other reason than to get some organization down where I can see it.
 
 As far as data and configuration are concerned, I could keep everything in .conf, constants, or similar files, but
-frankly I'd like to show off that I'm familiar with SQL interaction. Since this is a very light app, I'll spin up
+frankly I'd like to show the way I'm familiar with Java-SQL interaction. Since this is a very light app, I'll spin up
 SQLite in-memory and spawn in the necessary data at connection time (which will only tool info at this point, but still,
 that's where data like this belongs).
 
@@ -28,5 +28,10 @@ somewhat more interdependent, so I may skip around while I write them.
 
 Holidays is the first logical unit to get rewrites. I decided I could cut some code duplication by moving some of the
 logic into an abstract, instead of a pure interface. I also realized that some holidays we may choose to observe could
-be longer than a single day (e.g. Ramadan, with the use of an external API), so I'm going horrendously overboard to be
+be longer than a single day (e.g. Ramadan, with the use of an external API), so I'm going a little overboard to be
 able to handle that.
+
+Once again, date logic is the part that takes me the most time. I'm trying to figure out whether there's a way faster
+than O(n) to find weekday/weekend count for the rental period. I'm hoping there is, but sitting here puzzling it out
+is a waste of time when Google exists.
+All hail SO: https://stackoverflow.com/questions/4600034/calculate-number-of-weekdays-between-two-dates-in-java

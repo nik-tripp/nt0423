@@ -6,6 +6,12 @@ public abstract class Holiday {
     abstract String getName();
     abstract DateRange getObservedDates(int year);
 
+    /**
+     * Returns the number of days within the given range that are observed as this holiday.
+     * @param start
+     * @param end
+     * @return the count of days observed as this holiday
+     */
     int getDayCount(LocalDate start, LocalDate end) {
         if (!start.isBefore(end) && !start.equals(end)) {
             throw new IllegalArgumentException("Start date must be on or before end date");

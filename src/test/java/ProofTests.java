@@ -1,5 +1,6 @@
 import app.Storefront;
 import models.DBConnection;
+import models.RentalAgreement;
 import org.junit.After;
 import org.junit.Test;
 
@@ -16,17 +17,17 @@ public class ProofTests {
     }
 
     @Test
-    public void Test1() {
+    public void Test1() throws SQLException {
         try {
             Storefront.rent("JAKR", 5, 101, "09/03/15");
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException e) {
-            assertEquals("Discount percent must be between 0 and 100.", e.getMessage());
+            assertEquals("Discount percent cannot be over 100.", e.getMessage());
         }
     }
 
     @Test
-    public void Test2() {
+    public void Test2() throws SQLException {
         final String expected = "Tool code: LADW\n" +
                                 "Tool type: Ladder\n" +
                                 "Tool brand: Werner\n" +
@@ -39,11 +40,13 @@ public class ProofTests {
                                 "Discount percent: 10%\n" +
                                 "Discount amount: $0.40\n" +
                                 "Final charge: $3.58";
-        assertEquals(expected, Storefront.rent("LADW", 3, 10, "07/02/20").toString());
+        final RentalAgreement agreement = Storefront.rent("LADW", 3, 10, "07/02/20");
+        assertEquals(expected, agreement.toString());
+        agreement.printReceipt();
     }
 
     @Test
-    public void Test3() {
+    public void Test3() throws SQLException {
         final String expected = "Tool code: CHNS\n" +
                                 "Tool type: Chainsaw\n" +
                                 "Tool brand: Stihl\n" +
@@ -56,11 +59,13 @@ public class ProofTests {
                                 "Discount percent: 25%\n" +
                                 "Discount amount: $1.12\n" +
                                 "Final charge: $3.35";
-        assertEquals(expected, Storefront.rent("CHNS", 5, 25, "07/02/15").toString());
+        final RentalAgreement agreement = Storefront.rent("CHNS", 5, 25, "07/02/15");
+        assertEquals(expected, agreement.toString());
+        agreement.printReceipt();
     }
 
     @Test
-    public void Test4() {
+    public void Test4() throws SQLException {
         final String expected = "Tool code: JAKD\n" +
                                 "Tool type: Jackhammer\n" +
                                 "Tool brand: DeWalt\n" +
@@ -73,11 +78,13 @@ public class ProofTests {
                                 "Discount percent: 00%\n" +
                                 "Discount amount: $0.00\n" +
                                 "Final charge: $8.97";
-        assertEquals(expected, Storefront.rent("JAKD", 6, 0, "09/03/15").toString());
+        final RentalAgreement agreement = Storefront.rent("JAKD", 6, 0, "09/03/15");
+        assertEquals(expected, agreement.toString());
+        agreement.printReceipt();
     }
 
     @Test
-    public void Test5() {
+    public void Test5() throws SQLException {
         final String expected = "Tool code: JAKR\n" +
                                 "Tool type: Jackhammer\n" +
                                 "Tool brand: Ridgid\n" +
@@ -90,11 +97,13 @@ public class ProofTests {
                                 "Discount percent: 00%\n" +
                                 "Discount amount: $0.00\n" +
                                 "Final charge: $14.95";
-        assertEquals(expected, Storefront.rent("JAKR", 9, 0, "07/02/15").toString());
+        final RentalAgreement agreement = Storefront.rent("JAKR", 9, 0, "07/02/15");
+        assertEquals(expected, agreement.toString());
+        agreement.printReceipt();
     }
 
     @Test
-    public void Test6() {
+    public void Test6() throws SQLException {
         final String expected = "Tool code: JAKR\n" +
                                 "Tool type: Jackhammer\n" +
                                 "Tool brand: Ridgid\n" +
@@ -107,6 +116,8 @@ public class ProofTests {
                                 "Discount percent: 50%\n" +
                                 "Discount amount: $1.50\n" +
                                 "Final charge: $1.49";
-        assertEquals(expected, Storefront.rent("JAKR", 4, 50, "07/02/20").toString());
+        final RentalAgreement agreement = Storefront.rent("JAKR", 4, 50, "07/02/20");
+        assertEquals(expected, agreement.toString());
+        agreement.printReceipt();
     }
 }

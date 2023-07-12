@@ -20,7 +20,7 @@ public class TestTool {
         assertEquals("JAKR", tool.getCode());
         assertEquals("Jackhammer", tool.getType());
         assertEquals("Ridgid", tool.getBrand());
-        assertEquals(2.99, tool.getDailyCharge());
+        assertEquals(2.99, tool.getDailyCharge(), 0.001);
         assertTrue(tool.isWeekdayCharge());
         assertFalse(tool.isWeekendCharge());
         assertFalse(tool.isHolidayCharge());
