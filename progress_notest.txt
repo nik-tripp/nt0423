@@ -35,3 +35,7 @@ Once again, date logic is the part that takes me the most time. I'm trying to fi
 than O(n) to find weekday/weekend count for the rental period. I'm hoping there is, but sitting here puzzling it out
 is a waste of time when Google exists.
 All hail SO: https://stackoverflow.com/questions/4600034/calculate-number-of-weekdays-between-two-dates-in-java
+
+I was right that I would be bouncing between classes until everything was done - and now it's all done at once! Tests
+are now succeeding (and my small errors with my in some of the tests defs have been fixed), so I'm going to call this
+good here for the day, and review it tomorrow when I'm fresh. As it currently stands, though, I'm quite pleased.
