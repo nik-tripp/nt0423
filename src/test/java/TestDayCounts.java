@@ -1,11 +1,12 @@
-import holidays.RecognizedHoliday;
+import daycalculation.Weekday;
+import daycalculation.holiday.RecognizedHoliday;
 import org.junit.Test;
 
 import java.time.LocalDate;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class TestHolidays {
+public class TestDayCounts {
     @Test
     public void testIndependenceDay() {
         // Day of the fourth
@@ -42,5 +43,32 @@ public class TestHolidays {
 
         // Over a year, containing two labor days
         assertEquals(2, RecognizedHoliday.LABOR_DAY.getDayCount(LocalDate.of(2015, 9, 1), LocalDate.of(2016, 9, 8)));
+    }
+
+    @Test
+    public void testWeekdays() {
+        // Single weekday
+        assertEquals(1, Weekday.calculateWeekdays(LocalDate.of(2023, 7, 3), LocalDate.of(2023, 7, 3)));
+
+        // Multiple weekdays
+        assertEquals(3, Weekday.calculateWeekdays(LocalDate.of(2023, 7, 3), LocalDate.of(2023, 7, 5)));
+
+        // A full week, minus weekend
+        assertEquals(5, Weekday.calculateWeekdays(LocalDate.of(2023, 7, 3), LocalDate.of(2023, 7, 9)));
+
+        // Single weekend day
+        assertEquals(0, Weekday.calculateWeekdays(LocalDate.of(2023, 7, 2), LocalDate.of(2023, 7, 2)));
+
+        // Two days of the weekend
+        assertEquals(0, Weekday.calculateWeekdays(LocalDate.of(2023, 7, 1), LocalDate.of(2023, 7, 2)));
+
+        // Thursday to Monday, just for one more complicated rounding case
+        assertEquals(3, Weekday.calculateWeekdays(LocalDate.of(2023, 7, 6), LocalDate.of(2023, 7, 10)));
+
+        // End on a Saturday
+        assertEquals(10, Weekday.calculateWeekdays(LocalDate.of(2023, 7, 3), LocalDate.of(2023, 7, 15)));
+
+        // Start on a Saturday, end next Sunday
+        assertEquals(5, Weekday.calculateWeekdays(LocalDate.of(2023, 7, 15), LocalDate.of(2023, 7, 23)));
     }
 }

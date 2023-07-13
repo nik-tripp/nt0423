@@ -1,15 +1,21 @@
-package holidays;
+package daycalculation.holiday;
 
 import java.time.LocalDate;
 
 public abstract class Holiday {
     abstract String getName();
+
+    /**
+     * Returns the range of dates observed as this holiday for the given year, inclusive.
+     * @param year
+     * @return the range of dates observed as this holiday, final day inclusive
+     */
     abstract DateRange getObservedDates(int year);
 
     /**
-     * Returns the number of days within the given range that are observed as this holiday.
-     * @param start
-     * @param end
+     * Returns the number of days within the given range that are observed as this holiday. Range is inclusive.
+     * @param start LocalDate, inclusive
+     * @param end LocalDate, inclusive
      * @return the count of days observed as this holiday
      */
     int getDayCount(LocalDate start, LocalDate end) {
@@ -33,6 +39,7 @@ public abstract class Holiday {
             calcStart = observed.getStart().isBefore(start) ? start : observed.getStart();
             calcEnd = observed.getEnd().isAfter(end) ? end : observed.getEnd();
 
+            // Add the number of observed days within the range, including the final day, ignoring negative values
             count += Math.max(0, calcStart.until(calcEnd.plusDays(1), java.time.temporal.ChronoUnit.DAYS));
 
             // Go to the next year
@@ -40,7 +47,7 @@ public abstract class Holiday {
         }
 
         return count;
-    };
+    }
 
 
     protected class DateRange {

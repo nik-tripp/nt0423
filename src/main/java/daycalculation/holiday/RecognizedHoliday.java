@@ -1,4 +1,4 @@
-package holidays;
+package daycalculation.holiday;
 
 import java.time.LocalDate;
 
@@ -15,9 +15,9 @@ public enum RecognizedHoliday {
     }
 
     /**
-     * Returns the number of days within the given range that are observed as this holiday.
-     * @param start
-     * @param end
+     * Returns the number of days within the given range that are observed as this holiday. Range is inclusive.
+     * @param start LocalDate, inclusive
+     * @param end LocalDate, inclusive
      * @return the count of days observed as this holiday
      */
     public int getDayCount(LocalDate start, LocalDate end) {

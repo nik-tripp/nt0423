@@ -5,8 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class Tool {
-    private static final String FETCH_BY_CODE = "SELECT tool.rowid, * FROM tool JOIN tool_type ON tool.type = tool_type.type WHERE code = ?";
-    private static final String FETCH_BY_PK = "SELECT tool.rowid, * FROM tool JOIN tool_type ON tool.type = tool_type.type WHERE tool.rowid = ?";
+    private static final String FETCH_BY_CODE = "SELECT * FROM tool JOIN tool_type ON tool.type = tool_type.type WHERE code = ?";
     private long _pk;
     private String _code;
     private String _type;
@@ -31,25 +30,8 @@ public class Tool {
         return buildFromResultSet(tool);
     }
 
-
-    /**
-     * Fetch a tool from the database by its row's primary key.
-     * @param pk
-     * @return the tool, or null if not found
-     * @throws SQLException
-     */
-    public static Tool fetchByPK(long pk) throws SQLException {
-        PreparedStatement fetchByPK = DBConnection.getConnection().prepareStatement(FETCH_BY_PK);
-
-        fetchByPK.setLong(1, pk);
-        ResultSet tool = fetchByPK.executeQuery();
-
-        return buildFromResultSet(tool);
-    }
-
     private static Tool buildFromResultSet(ResultSet tool) throws SQLException {
         Tool ret = null;
-        long pk;
         String code;
         String type;
         String brand;
@@ -59,7 +41,6 @@ public class Tool {
         boolean holidayCharge;
 
         if (tool.next()) {
-            pk = tool.getLong("rowid");
             code = tool.getString("code");
             type = tool.getString("type");
             brand = tool.getString("brand");
@@ -67,7 +48,7 @@ public class Tool {
             weekdayCharge = tool.getBoolean("weekday_charge");
             weekendCharge = tool.getBoolean("weekend_charge");
             holidayCharge = tool.getBoolean("holiday_charge");
-            ret = new Tool(pk, code, type, brand, dailyCharge, weekdayCharge, weekendCharge, holidayCharge);
+            ret = new Tool(code, type, brand, dailyCharge, weekdayCharge, weekendCharge, holidayCharge);
         }
 
         return ret;
@@ -76,8 +57,7 @@ public class Tool {
     private Tool() {
     }
 
-    private Tool(long pk, String code, String type, String brand, float dailyCharge, boolean weekdayCharge, boolean weekendCharge, boolean holidayCharge) {
-        _pk = pk;
+    private Tool(String code, String type, String brand, float dailyCharge, boolean weekdayCharge, boolean weekendCharge, boolean holidayCharge) {
         _code = code;
         _type = type;
         _brand = brand;

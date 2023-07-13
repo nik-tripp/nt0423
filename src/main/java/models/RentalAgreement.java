@@ -1,6 +1,7 @@
 package models;
 
-import holidays.RecognizedHoliday;
+import daycalculation.Weekday;
+import daycalculation.holiday.RecognizedHoliday;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 public class RentalAgreement {
-    private static final String INSERT = "INSERT INTO rental_agreement (tool_id, rental_days, check_out_date, discount_percent) VALUES (?, ?, ?, ?)";
+    private static final String INSERT = "INSERT INTO rental_agreement (tool_code, tool_type, tool_brand, rental_days, check_out_date, due_date, charge_days, daily_charge, discount_percent) VALUES (?, ?, ?, ?, ?, ?, ? , ?, ?)";
     private static final String FETCH_BY_ID = "SELECT rowid, * FROM rental_agreement WHERE rowid = ?";
     private static final DecimalFormat CURRENCY_FORMAT = new DecimalFormat("0.00");
     static {
@@ -22,16 +23,14 @@ public class RentalAgreement {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yy");
 
     private long _pk;
-    private Tool _tool;
+    private String _toolCode;
+    private String _toolType;
+    private String _toolBrand;
     private int _rentalDays;
     private LocalDate _checkoutDate;
-
-    // This could be calculated in a getter, but doing date math on demand seems like a poor decision
     private LocalDate _dueDate;
-
-    // This could be calculated in a getter, but without caching we could end up running through expensive holiday
-    // checks more times than I would like, so this is a simpler solution
     private int _chargeDays;
+    private float _dailyCharge;
     private int _discountPercent;
 
     // This could also be calculated on demand, except that the rounding requirements make the process more complex
@@ -39,55 +38,17 @@ public class RentalAgreement {
 
     private RentalAgreement(){}
 
-    private RentalAgreement(Long pk, Tool tool, int rentalDays, LocalDate checkoutDate, LocalDate dueDate, int discountPercent) {
+    private RentalAgreement(Long pk, String toolCode, String toolType, String toolBrand, int rentalDays, LocalDate checkoutDate, LocalDate dueDate, int chargeDays, float dailyCharge, int discountPercent) {
         _pk = pk;
-        _tool = tool;
+        _toolCode = toolCode;
+        _toolType = toolType;
+        _toolBrand = toolBrand;
         _rentalDays = rentalDays;
         _checkoutDate = checkoutDate;
         _dueDate = dueDate;
-        _discountPercent = discountPercent;
-        // Charges are for days after checkout, including due date, so calculate based on the day after checkout and the
-        // day after the due date (so that the due date itself is included)
-        LocalDate calcStartDay = checkoutDate.plusDays(1);
-        LocalDate calcEndDay = dueDate.plusDays(1);
-        int chargeDays = rentalDays;
-
-        // Only bother with calculating weekdays if that sort of thing matters for the tool
-        if (!_tool.isWeekdayCharge() || !_tool.isWeekendCharge()) {
-            // Weekday calculations from https://stackoverflow.com/questions/4600034/calculate-number-of-weekdays-between-two-dates-in-java
-            DayOfWeek startW = calcStartDay.getDayOfWeek();
-            DayOfWeek endW = calcEndDay.getDayOfWeek();
-
-            // Remove weekends
-            int weekdays = rentalDays - (2 * (rentalDays / 7));
-
-            // Handle edge days
-            if (rentalDays % 7 != 0) {
-                // If we started or ended on a sunday, there was one extra weekend day
-                if (startW == DayOfWeek.SUNDAY || endW == DayOfWeek.SUNDAY) {
-                    weekdays--;
-                } else if (endW.getValue() < startW.getValue()) { // If we started later in the week than we ended, there was a whole extra weekend
-                    weekdays -= 2;
-                }
-            }
-
-            // Remove weekdays or weekends, whichever is necessary
-            if (!_tool.isWeekdayCharge()) {
-                chargeDays -= weekdays;
-            }
-            else {
-                chargeDays -= rentalDays - weekdays;
-            }
-        }
-
-        // Remove holidays, if necessary
-        if (!tool.isHolidayCharge()) {
-            for (RecognizedHoliday holiday : RecognizedHoliday.values()) {
-                chargeDays -= holiday.getDayCount(calcStartDay, calcEndDay);
-            }
-        }
-
         _chargeDays = chargeDays;
+        _dailyCharge = dailyCharge;
+        _discountPercent = discountPercent;
         _discountAmount = Float.parseFloat(CURRENCY_FORMAT.format(getPreDiscountCharge() * _discountPercent / 100.0f));
     }
 
@@ -120,18 +81,24 @@ public class RentalAgreement {
         Tool tool = Tool.fetchByCode(toolCode);
         LocalDate checkoutDate = LocalDate.parse(checkoutDateString, DateTimeFormatter.ofPattern("MM/dd/yy"));
         LocalDate dueDate = checkoutDate.plusDays(rentalDays);
+        int chargeDays = calculateChargeDays(tool, rentalDays, checkoutDate);
         long pk;
 
         try (PreparedStatement statement = DBConnection.getConnection().prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setLong(1, tool.getPK());
-            statement.setInt(2, rentalDays);
-            statement.setString(3, checkoutDate.format(DateTimeFormatter.ISO_DATE));
-            statement.setInt(4, discountPercent);
+            statement.setString(1, tool.getCode());
+            statement.setString(2, tool.getType());
+            statement.setString(3, tool.getBrand());
+            statement.setInt(4, rentalDays);
+            statement.setString(5, checkoutDate.format(DateTimeFormatter.ISO_DATE));
+            statement.setString(6, dueDate.format(DateTimeFormatter.ISO_DATE));
+            statement.setInt(7, chargeDays);
+            statement.setFloat(8, tool.getDailyCharge());
+            statement.setInt(9, discountPercent);
             statement.execute();
             pk = statement.getGeneratedKeys().getLong(1);
         }
 
-        return new RentalAgreement(pk, tool, rentalDays, checkoutDate, dueDate, discountPercent);
+        return new RentalAgreement(pk, tool.getCode(), tool.getType(), tool.getBrand(), rentalDays, checkoutDate, dueDate, chargeDays, tool.getDailyCharge(), discountPercent);
     }
 
     /**
@@ -142,10 +109,14 @@ public class RentalAgreement {
      */
     public static RentalAgreement fetchByPK(long pk) throws SQLException {
         RentalAgreement ret = null;
-        Tool tool;
+        String toolCode;
+        String toolType;
+        String toolBrand;
         int rentalDays;
         LocalDate checkoutDate;
         LocalDate dueDate;
+        int chargeDays;
+        float dailyCharge;
         int discountPercent;
 
         try (PreparedStatement statement = DBConnection.getConnection().prepareStatement(FETCH_BY_ID)) {
@@ -153,16 +124,51 @@ public class RentalAgreement {
             statement.execute();
             ResultSet result = statement.getResultSet();
             if (result.next()) {
-                tool = Tool.fetchByPK(result.getLong("tool_id"));
+                toolCode = result.getString("tool_code");
+                toolType = result.getString("tool_type");
+                toolBrand = result.getString("tool_brand");
                 rentalDays = result.getInt("rental_days");
                 checkoutDate = LocalDate.parse(result.getString("check_out_date"));
-                dueDate = checkoutDate.plusDays(rentalDays);
+                dueDate = LocalDate.parse(result.getString("due_date"));
+                chargeDays = result.getInt("charge_days");
+                dailyCharge = result.getFloat("daily_charge");
                 discountPercent = result.getInt("discount_percent");
-                ret = new RentalAgreement(pk, tool, rentalDays, checkoutDate, dueDate, discountPercent);
+                ret = new RentalAgreement(pk, toolCode, toolType, toolBrand, rentalDays, checkoutDate, dueDate, chargeDays, dailyCharge, discountPercent);
             }
         }
 
         return ret;
+    }
+
+    public static int calculateChargeDays(Tool tool, int rentalDays, LocalDate checkoutDate) {
+        // Charges are for days after checkout, including the checkout day
+        LocalDate firstChargeDay = checkoutDate.plusDays(1);
+        LocalDate finalChargeDay = checkoutDate.plusDays(rentalDays);
+
+        // Assume tool is charged for all days of rental
+        int chargeDays = rentalDays;
+
+        // Only bother with calculating weekdays if that sort of thing matters for the tool
+        if (!tool.isWeekdayCharge() || !tool.isWeekendCharge()) {
+            long weekdays = Weekday.calculateWeekdays(firstChargeDay, finalChargeDay);
+
+            // Remove weekdays, weekends, or both if necessary
+            if (!tool.isWeekdayCharge()) {
+                chargeDays -= weekdays;
+            }
+            if (!tool.isWeekendCharge()) {
+                chargeDays -= rentalDays - weekdays;
+            }
+        }
+
+        // Remove holidays, if necessary
+        if (!tool.isHolidayCharge() && chargeDays > 0) {
+            for (RecognizedHoliday holiday : RecognizedHoliday.values()) {
+                chargeDays -= holiday.getDayCount(firstChargeDay, finalChargeDay);
+            }
+        }
+
+        return chargeDays;
     }
 
     public long getPK() {
@@ -170,15 +176,15 @@ public class RentalAgreement {
     }
 
     public String getToolCode() {
-        return _tool.getCode();
+        return _toolCode;
     }
 
     public String getToolType() {
-        return _tool.getType();
+        return _toolType;
     }
 
     public String getToolBrand() {
-        return _tool.getBrand();
+        return _toolBrand;
     }
 
     public int getRentalDays() {
@@ -194,7 +200,7 @@ public class RentalAgreement {
     }
 
     public float getDailyRentalCharge() {
-        return _tool.getDailyCharge();
+        return _dailyCharge;
     }
 
     public int getChargeDays() {
@@ -202,7 +208,7 @@ public class RentalAgreement {
     }
 
     public float getPreDiscountCharge() {
-        return _chargeDays * _tool.getDailyCharge();
+        return _chargeDays * _dailyCharge;
     }
 
     public int getDiscountPercent() {
@@ -257,15 +263,19 @@ public class RentalAgreement {
         }
         RentalAgreement other = (RentalAgreement)o;
         return _pk == other._pk &&
-               _tool.getPK() == other._tool.getPK() &&
+               _toolCode.equals(other._toolCode) &&
+               _toolType.equals(other._toolType) &&
+               _toolBrand.equals(other._toolBrand) &&
                _rentalDays == other._rentalDays &&
                _checkoutDate.equals(other._checkoutDate) &&
                _dueDate.equals(other._dueDate) &&
+               _chargeDays == other._chargeDays &&
+               _dailyCharge == other._dailyCharge &&
                _discountPercent == other._discountPercent;
     }
 
     public int hashCode() {
-        return Objects.hash(_pk, _tool, _rentalDays, _checkoutDate, _dueDate, _discountPercent);
+        return Objects.hash(_pk, _toolCode, _toolType, _toolBrand, _rentalDays, _checkoutDate, _dueDate, _chargeDays, _dailyCharge, _discountPercent);
     }
 
     public static class IllegalRentalDaysException extends IllegalArgumentException {

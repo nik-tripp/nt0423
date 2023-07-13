@@ -27,7 +27,7 @@ point where doing the integration testing seems feasible. Once I get past tools,
 somewhat more interdependent, so I may skip around while I write them.
 
 Holidays is the first logical unit to get rewrites. I decided I could cut some code duplication by moving some of the
-logic into an abstract, instead of a pure interface. I also realized that some holidays we may choose to observe could
+logic into an abstract, instead of a pure interface. I also realized that some daycalculation we may choose to observe could
 be longer than a single day (e.g. Ramadan, with the use of an external API), so I'm going a little overboard to be
 able to handle that.
 
@@ -39,3 +39,22 @@ All hail SO: https://stackoverflow.com/questions/4600034/calculate-number-of-wee
 I was right that I would be bouncing between classes until everything was done - and now it's all done at once! Tests
 are now succeeding (and my small errors with my in some of the tests defs have been fixed), so I'm going to call this
 good here for the day, and review it tomorrow when I'm fresh. As it currently stands, though, I'm quite pleased.
+
+Thought about it some more and realized I could probably move the weekday calculation somewhere that it could be tested
+independently, and I should probably set a test or two up for that. With that done, I'll call this ready for review.
+
+In the process of moving weekday calculations, I noticed that I wasn't being incredibly consistent with end date
+inclusivity, so I've normalized that. I also realized that recalculating this whenever the tool is fetched from the DB
+is not only wasteful, it would result in a lack of historical data, so I'm going to add the pricing and tool info fields
+to the agreement table. It'll take more space, but it'll actually be accurate (I cannot believe I didn't initially think
+of the fact that prices could change over time, or recognized holidays for that matter.) I'll also unlink the tool
+itself from rental agreements, since that's not necessary if I'm copying the data over for historical purposes. This
+also means I can just use the tool's code as a primary key, which is a lot easier to work with.
+
+Big win for TDD: weekday counter had a bug after I moved it and explicitly tracked inclusive vs exclusive. Fortunately
+it was caught by the proofs (likely hidden by some off-by-one caused by the inclusive/exclusive switch), and I was able
+to isolate it thanks to being able to test weekday counts independently.
+
+I now feel much more confident in this solution, now that I've got all the moving parts separated and tested
+independently, as well as confirming that it actually meets what would be required of an actual app with regards to
+historical data. I'm going to call this done and ready for review.
